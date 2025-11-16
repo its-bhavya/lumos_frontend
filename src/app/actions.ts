@@ -68,7 +68,7 @@ export async function evaluateAnswer(sessionId: string, questionNum: number, use
   
   const data = await response.json();
 
-  // The backend returns score 0, 0.5, or 1.
+  // The backend returns score 0, 0.5, or 1 and the correct answer.
   return {
     score: data.score,
     feedback: data.feedback,
