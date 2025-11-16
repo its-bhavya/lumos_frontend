@@ -321,7 +321,7 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Answer Type</FormLabel>
-                    <Select onValue-change={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select answer type" /></SelectTrigger>
                       </FormControl>
