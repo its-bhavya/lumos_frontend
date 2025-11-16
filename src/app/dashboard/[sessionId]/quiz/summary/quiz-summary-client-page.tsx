@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -60,7 +61,7 @@ export default function QuizSummaryClientPage({ sessionId }: { sessionId: string
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center space-y-4">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <h1 className="font-headline text-4xl text-primary">Calculating Your Results...</h1>
+        <h1 className="font-headline text-4xl text-primary">Generating a summary of your results...</h1>
       </div>
     );
   }
@@ -149,3 +150,5 @@ export default function QuizSummaryClientPage({ sessionId }: { sessionId: string
     </div>
   );
 }
+
+    

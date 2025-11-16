@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { evaluateAnswer } from "@/app/actions";
-import { Check, ChevronsRight, Loader2, Sparkles, X, ArrowLeft } from "lucide-react";
+import { Check, ChevronsRight, Loader2, Sparkles, X, ArrowLeft, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -223,10 +223,21 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
               ) : (
                 <div className="space-y-4">
                    {evaluation && (
-                    <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : evaluation.score >= 0.5 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
-                        {evaluation.score === 1 ? <Check className="h-5 w-5 mt-0.5"/> : <X className="h-5 w-5 mt-0.5"/>}
-                        <p className="font-medium">{evaluation.feedback}</p>
-                    </div>
+                     <div className="space-y-4">
+                        <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : evaluation.score >= 0.5 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
+                            {evaluation.score === 1 ? <Check className="h-5 w-5 mt-0.5"/> : <X className="h-5 w-5 mt-0.5"/>}
+                            <p className="font-medium">{evaluation.feedback}</p>
+                        </div>
+                        {evaluation.score < 1 && (
+                            <div className="p-4 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 flex items-start gap-3">
+                                <Info className="h-5 w-5 mt-0.5" />
+                                <div>
+                                    <h4 className="font-semibold">Correct Answer</h4>
+                                    <p className="font-medium">{evaluation.correct_answer}</p>
+                                </div>
+                            </div>
+                        )}
+                     </div>
                    )}
                   <Button onClick={handleNextQuestion} className="w-full">
                     {quizData && currentQuestionIndex === quizData.quiz_questions.length - 1 ? 'Finish & See Results' : 'Next Question'}
@@ -317,3 +328,5 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
     </div>
   );
 }
+
+    
