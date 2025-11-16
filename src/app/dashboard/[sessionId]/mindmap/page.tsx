@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +30,6 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
         const mindmapRes = await fetch(`${BACKEND_URL}/generate_mindmap`, { method: 'POST', body: mindmapFormData });
         if (!mindmapRes.ok) throw new Error("Failed to generate the mind map image.");
         
-        // The backend returns the image blob directly
         const imageBlob = await mindmapRes.blob();
         const imageUrl = URL.createObjectURL(imageBlob);
         setMindMapUrl(imageUrl);
@@ -55,7 +53,6 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
     if (!mindMapUrl) return;
     const link = document.createElement('a');
     link.href = mindMapUrl;
-    // The backend now returns SVG, so let's name it appropriately.
     link.download = "mindmap.svg"; 
     document.body.appendChild(link);
     link.click();
@@ -64,26 +61,24 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
 
 
   return (
-      <div className="w-full">
-        <div>
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="font-headline text-4xl">Generated Mind Map</h2>
-              <p className="text-lg pt-2 text-muted-foreground">Here is a visualization of your study materials.</p>
-            </div>
-            <div className="flex gap-2">
-                <Button onClick={downloadImage} variant="outline" asChild={false} disabled={!mindMapUrl || loading}>
-                    <span>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download SVG
-                    </span>
-                </Button>
-            </div>
+      <div className="w-full h-full flex flex-col">
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="font-headline text-4xl">Generated Mind Map</h2>
+            <p className="text-lg pt-2 text-muted-foreground">Here is a visualization of your study materials.</p>
+          </div>
+          <div className="flex gap-2">
+              <Button onClick={downloadImage} variant="outline" asChild={false} disabled={!mindMapUrl || loading}>
+                  <span>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download SVG
+                  </span>
+              </Button>
           </div>
         </div>
-        <div className="mt-6">
+        <div className="mt-6 flex-1">
           <div 
-            className="w-full h-[calc(100vh-16rem)] bg-secondary rounded-lg p-4 overflow-auto border relative flex items-center justify-center"
+            className="w-full h-full bg-secondary rounded-lg p-4 overflow-hidden border relative flex items-center justify-center"
           >
             {loading ? (
                  <div className="flex flex-col items-center gap-4 text-primary">
@@ -94,8 +89,8 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
                 <Image 
                     src={mindMapUrl}
                     alt="Generated Mind Map"
-                    fill
-                    style={{objectFit: 'contain'}}
+                    layout="fill"
+                    objectFit="contain"
                     data-ai-hint="concept map"
                 />
             ) : (

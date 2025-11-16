@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Send, Lightbulb, User } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import MarkdownRenderer from "@/components/markdown-renderer";
 
 type Message = {
   role: "user" | "ai";
@@ -76,67 +76,65 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
 
 
   return (
-    <div className="flex justify-center h-[calc(100vh-2rem-env(safe-area-inset-bottom))] sm:h-[calc(100vh-4rem-env(safe-area-inset-bottom))]">
-      <div className="w-full max-w-4xl flex flex-col">
-        <div className="flex flex-row items-center justify-between">
-          <h2 className="font-headline text-3xl">Ask a Question</h2>
-        </div>
-        <div className="flex-1 mt-6">
-          <ScrollArea className="h-[calc(100vh-18rem)] sm:h-[calc(100vh-16rem)] w-full pr-4" ref={scrollAreaRef}>
-            <div className="space-y-6">
-              {messages.map((message, index) => (
-                <div key={index} className={`flex items-start gap-3 ${message.role === "user" ? "justify-end" : ""}`}>
-                  {message.role === "ai" && (
-                    <Avatar>
-                      <AvatarFallback><Lightbulb /></AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className={`rounded-lg p-3 max-w-[80%] ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
-                    <p className="text-sm">{message.content}</p>
-                  </div>
-                  {message.role === "user" && (
-                    <Avatar>
-                      <AvatarFallback><User /></AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              ))}
-               {loading && (
-                <div className="flex items-start gap-3">
+    <div className="flex flex-col h-[calc(100vh-8rem)]">
+        <h2 className="font-headline text-3xl mb-6">Ask a Question</h2>
+        <ScrollArea className="flex-1 w-full pr-4" ref={scrollAreaRef}>
+          <div className="space-y-6 max-w-4xl mx-auto">
+            {messages.map((message, index) => (
+              <div key={index} className={`flex items-start gap-3 ${message.role === "user" ? "justify-end" : ""}`}>
+                {message.role === "ai" && (
                   <Avatar>
                     <AvatarFallback><Lightbulb /></AvatarFallback>
                   </Avatar>
-                  <div className="rounded-lg p-3 bg-secondary flex items-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
+                )}
+                <div className={`rounded-lg p-3 max-w-[80%] ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
+                    {message.role === 'ai' ? (
+                      <MarkdownRenderer content={message.content} />
+                    ) : (
+                      <p className="text-sm">{message.content}</p>
+                    )}
                 </div>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
-        <div className="mt-auto pt-4">
-          <form
-            className="flex w-full items-center space-x-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
-          >
-            <Input
-              id="message"
-              placeholder="Type your question..."
-              className="flex-1"
-              autoComplete="off"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={loading}
-            />
-            <Button type="submit" size="icon" disabled={loading || !input.trim()}>
-              <Send className="h-4 w-4" />
-              <span className="sr-only">Send</span>
-            </Button>
-          </form>
-        </div>
+                {message.role === "user" && (
+                  <Avatar>
+                    <AvatarFallback><User /></AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+            ))}
+             {loading && (
+              <div className="flex items-start gap-3">
+                <Avatar>
+                  <AvatarFallback><Lightbulb /></AvatarFallback>
+                </Avatar>
+                <div className="rounded-lg p-3 bg-secondary flex items-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      <div className="mt-auto pt-4 max-w-4xl mx-auto w-full">
+        <form
+          className="flex w-full items-center space-x-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+        >
+          <Input
+            id="message"
+            placeholder="Type your question..."
+            className="flex-1"
+            autoComplete="off"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            disabled={loading}
+          />
+          <Button type="submit" size="icon" disabled={loading || !input.trim()}>
+            <Send className="h-4 w-4" />
+            <span className="sr-only">Send</span>
+          </Button>
+        </form>
       </div>
     </div>
   );
