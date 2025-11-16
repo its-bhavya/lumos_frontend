@@ -1,3 +1,5 @@
+import LandingPageClient from "@/components/landing-page-client";
+
 export default function Home() {
-  return <></>;
+  return <LandingPageClient />;
 }
