@@ -52,12 +52,12 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
   }, [params.sessionId, toast]);
 
   return (
-      <Card className="w-full shadow-lg">
-        <CardHeader>
+      <div className="w-full">
+        <div>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="font-headline text-4xl">Generated Mind Map</CardTitle>
-              <CardDescription className="text-lg pt-2">Here is a visualization of your study materials.</CardDescription>
+              <h2 className="font-headline text-4xl">Generated Mind Map</h2>
+              <p className="text-lg pt-2 text-muted-foreground">Here is a visualization of your study materials.</p>
             </div>
             <div className="flex gap-2">
                 <Button variant="outline" asChild disabled={!mindMapUrl || loading}>
@@ -68,8 +68,8 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
                 </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="mt-6">
           <div 
             className="w-full h-[calc(100vh-16rem)] bg-secondary rounded-lg p-4 overflow-auto border relative flex items-center justify-center"
           >
@@ -90,7 +90,7 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
                 <p className="text-muted-foreground">Could not load mind map.</p>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import MarkdownRenderer from "@/components/markdown-renderer";
@@ -59,12 +58,12 @@ export default function NotesPage({ params }: { params: { sessionId: string } })
   }
 
   return (
-      <Card className="w-full shadow-lg">
-        <CardHeader>
+      <div className="w-full">
+        <div>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="font-headline text-4xl">Generated Notes</CardTitle>
-              <CardDescription className="text-lg pt-2">Here is a summary of your study materials.</CardDescription>
+              <h2 className="font-headline text-4xl">Generated Notes</h2>
+              <p className="text-lg pt-2 text-muted-foreground">Here is a summary of your study materials.</p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={downloadNotes} disabled={loading || !notes}>
@@ -73,8 +72,8 @@ export default function NotesPage({ params }: { params: { sessionId: string } })
               </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="mt-6">
           <div className="p-6 bg-secondary rounded-lg h-[calc(100vh-16rem)] overflow-auto">
             {loading ? (
               <div className="flex justify-center items-center h-full">
@@ -84,7 +83,7 @@ export default function NotesPage({ params }: { params: { sessionId: string } })
               <MarkdownRenderer content={notes} />
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
   );
 }

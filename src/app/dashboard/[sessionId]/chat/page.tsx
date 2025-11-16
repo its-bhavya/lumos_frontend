@@ -77,11 +77,11 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
 
   return (
     <div className="flex justify-center h-[calc(100vh-2rem-env(safe-area-inset-bottom))] sm:h-[calc(100vh-4rem-env(safe-area-inset-bottom))]">
-      <Card className="w-full max-w-4xl shadow-lg flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-headline text-3xl">Ask a Question</CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1">
+      <div className="w-full max-w-4xl flex flex-col">
+        <div className="flex flex-row items-center justify-between">
+          <h2 className="font-headline text-3xl">Ask a Question</h2>
+        </div>
+        <div className="flex-1 mt-6">
           <ScrollArea className="h-[calc(100vh-18rem)] sm:h-[calc(100vh-16rem)] w-full pr-4" ref={scrollAreaRef}>
             <div className="space-y-6">
               {messages.map((message, index) => (
@@ -113,8 +113,8 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
               )}
             </div>
           </ScrollArea>
-        </CardContent>
-        <CardFooter>
+        </div>
+        <div className="mt-auto pt-4">
           <form
             className="flex w-full items-center space-x-2"
             onSubmit={(e) => {
@@ -136,8 +136,8 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
               <span className="sr-only">Send</span>
             </Button>
           </form>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
