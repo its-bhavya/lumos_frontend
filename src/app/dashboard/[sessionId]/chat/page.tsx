@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Send, ArrowLeft } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Message = {
@@ -49,19 +48,13 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
 
 
   return (
-    <div className="container py-12 flex justify-center">
-      <Card className="w-full max-w-3xl shadow-lg">
+    <div className="flex justify-center h-[calc(100vh-2rem-env(safe-area-inset-bottom))] sm:h-[calc(100vh-4rem-env(safe-area-inset-bottom))]">
+      <Card className="w-full max-w-4xl shadow-lg flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-headline text-3xl">Ask a Question</CardTitle>
-           <Button asChild variant="outline">
-              <Link href={`/dashboard/${params.sessionId}`}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Dashboard
-              </Link>
-          </Button>
         </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[500px] w-full pr-4" ref={scrollAreaRef}>
+        <CardContent className="flex-1">
+          <ScrollArea className="h-[calc(100vh-18rem)] sm:h-[calc(100vh-16rem)] w-full pr-4" ref={scrollAreaRef}>
             <div className="space-y-6">
               {messages.map((message, index) => (
                 <div key={index} className={`flex items-start gap-3 ${message.role === "user" ? "justify-end" : ""}`}>

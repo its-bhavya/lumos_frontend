@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, ArrowLeft } from "lucide-react";
+import { Download } from "lucide-react";
 import MarkdownRenderer from "@/components/markdown-renderer";
 
 const placeholderNotes = `
@@ -34,8 +33,7 @@ export default async function NotesPage({ params }: { params: { sessionId: strin
   const notes = placeholderNotes;
 
   return (
-    <div className="container py-12">
-      <Card className="max-w-4xl mx-auto shadow-lg">
+      <Card className="w-full shadow-lg">
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
@@ -47,21 +45,14 @@ export default async function NotesPage({ params }: { params: { sessionId: strin
                 <Download className="mr-2 h-4 w-4" />
                 Download as PDF
               </Button>
-               <Button asChild variant="outline">
-                  <Link href={`/dashboard/${params.sessionId}`}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Link>
-              </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="p-6 bg-secondary rounded-lg">
+          <div className="p-6 bg-secondary rounded-lg h-[calc(100vh-16rem)] overflow-auto">
             <MarkdownRenderer content={notes} />
           </div>
         </CardContent>
       </Card>
-    </div>
   );
 }

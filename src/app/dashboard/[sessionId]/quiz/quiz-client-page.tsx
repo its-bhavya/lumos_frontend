@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { evaluateAnswer } from "@/app/actions";
 import { Check, ChevronsRight, Loader2, Sparkles, X, ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type QuizState = 'config' | 'loading' | 'active' | 'finished';
 
@@ -108,12 +109,33 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
         setEvaluation(null);
     } else {
         setQuizState('finished');
-        localStorage.setItem(`quizResults_${sessionId}`, JSON.stringify(quizResults));
+        if(!evaluation && quizData) { // if user skips last question
+          const currentQuestion = quizData.questions[currentQuestionIndex];
+          const finalResults = [...quizResults, {
+              question: currentQuestion.question,
+              userAnswer: 'Skipped',
+              correctAnswer: currentQuestion.answer,
+              score: 0,
+              feedback: `The correct answer is: "${currentQuestion.answer}"`
+          }];
+          localStorage.setItem(`quizResults_${sessionId}`, JSON.stringify(finalResults));
+        } else {
+          localStorage.setItem(`quizResults_${sessionId}`, JSON.stringify(quizResults));
+        }
         router.push(`/dashboard/${sessionId}/quiz/summary`);
     }
   };
-  
 
+  const goToQuestion = (index: number) => {
+    if (index < currentQuestionIndex) {
+      setCurrentQuestionIndex(index);
+      const pastResult = quizResults[index];
+      setUserAnswer(pastResult.userAnswer);
+      setEvaluation({score: pastResult.score, feedback: pastResult.feedback});
+      setQuizResults(quizResults.slice(0, index));
+    }
+  }
+  
   const progress = quizData ? ((currentQuestionIndex + 1) / quizData.questions.length) * 100 : 0;
   const currentQuestion = quizData?.questions[currentQuestionIndex];
 
@@ -129,15 +151,25 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   if (quizState === 'active' && currentQuestion) {
     return (
       <div className="container py-12 flex justify-center">
-        <div className="w-full max-w-3xl space-y-6">
-          <div className="flex items-center justify-between">
-              <Button asChild variant="outline" size="sm">
-                  <Link href={`/dashboard/${sessionId}`}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Link>
-              </Button>
-              <div className="text-center text-muted-foreground font-medium">Question {currentQuestionIndex + 1} of {quizData?.questions.length}</div>
+        <div className="w-full max-w-4xl space-y-6">
+           <div className="flex items-center justify-between">
+              <div className="w-24"></div>
+              <div className="flex gap-2 items-center text-muted-foreground font-medium">
+                  {quizData?.questions.map((_, index) => (
+                      <button 
+                        key={index}
+                        onClick={() => goToQuestion(index)}
+                        disabled={index >= currentQuestionIndex && !evaluation}
+                        className={cn(
+                            "h-8 w-8 rounded-full flex items-center justify-center transition-colors",
+                            index === currentQuestionIndex ? "bg-primary text-primary-foreground" : "bg-secondary",
+                            index < currentQuestionIndex ? "hover:bg-primary/80" : "cursor-not-allowed"
+                        )}
+                      >
+                        {index + 1}
+                      </button>
+                  ))}
+              </div>
               <div className="w-24"></div>
           </div>
           <Progress value={progress} />
@@ -182,17 +214,9 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   return (
     <div className="container py-12 flex justify-center">
       <Card className="w-full max-w-lg shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
+        <CardHeader>
             <CardTitle className="font-headline text-3xl">Quiz Setup</CardTitle>
             <CardDescription>Configure your quiz and start testing your knowledge.</CardDescription>
-          </div>
-          <Button asChild variant="outline">
-              <Link href={`/dashboard/${sessionId}`}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Link>
-          </Button>
         </CardHeader>
         <CardContent>
           <Form {...form}>
