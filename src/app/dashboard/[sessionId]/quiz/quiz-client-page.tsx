@@ -109,19 +109,18 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
         setEvaluation(null);
     } else {
         setQuizState('finished');
+        let finalResults = [...quizResults];
         if(!evaluation && quizData) { // if user skips last question
           const currentQuestion = quizData.questions[currentQuestionIndex];
-          const finalResults = [...quizResults, {
+          finalResults.push({
               question: currentQuestion.question,
               userAnswer: 'Skipped',
               correctAnswer: currentQuestion.answer,
               score: 0,
               feedback: `The correct answer is: "${currentQuestion.answer}"`
-          }];
-          localStorage.setItem(`quizResults_${sessionId}`, JSON.stringify(finalResults));
-        } else {
-          localStorage.setItem(`quizResults_${sessionId}`, JSON.stringify(quizResults));
+          });
         }
+        localStorage.setItem(`quizResults_${sessionId}`, JSON.stringify(finalResults));
         router.push(`/dashboard/${sessionId}/quiz/summary`);
     }
   };
@@ -131,8 +130,7 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
       setCurrentQuestionIndex(index);
       const pastResult = quizResults[index];
       setUserAnswer(pastResult.userAnswer);
-      setEvaluation({score: pastResult.score, feedback: pastResult.feedback});
-      setQuizResults(quizResults.slice(0, index));
+      setEvaluation(null); // Don't show evaluation when going back
     }
   }
   
@@ -183,23 +181,25 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
                 rows={4}
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
-                disabled={!!evaluation}
+                disabled={!!evaluation || currentQuestionIndex < quizResults.length}
               />
             </CardContent>
             <CardFooter className="flex-col items-stretch gap-4">
-              {!evaluation ? (
+              {!evaluation && currentQuestionIndex === quizResults.length ? (
                  <div className="flex gap-2">
                     <Button onClick={handleAnswerSubmit} disabled={!userAnswer} className="w-full">Submit Answer</Button>
                     <Button onClick={handleNextQuestion} variant="outline" className="w-full">Skip</Button>
                  </div>
               ) : (
                 <div className="space-y-4">
-                   <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 100 ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : evaluation.score > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
+                   {evaluation && (
+                    <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 100 ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : evaluation.score > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
                         {evaluation.score === 100 ? <Check className="h-5 w-5 mt-0.5"/> : <X className="h-5 w-5 mt-0.5"/>}
                         <p className="font-medium">{evaluation.feedback}</p>
                     </div>
+                   )}
                   <Button onClick={handleNextQuestion} className="w-full">
-                    {currentQuestionIndex === quizData!.questions.length - 1 ? 'Finish & See Results' : 'Next Question'}
+                    {quizData && currentQuestionIndex === quizData.questions.length - 1 ? 'Finish & See Results' : 'Next Question'}
                     <ChevronsRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>

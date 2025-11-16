@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Lightbulb, User } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Message = {
@@ -60,7 +60,7 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
                 <div key={index} className={`flex items-start gap-3 ${message.role === "user" ? "justify-end" : ""}`}>
                   {message.role === "ai" && (
                     <Avatar>
-                      <AvatarFallback>AI</AvatarFallback>
+                      <AvatarFallback><Lightbulb /></AvatarFallback>
                     </Avatar>
                   )}
                   <div className={`rounded-lg p-3 max-w-[80%] ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
@@ -68,7 +68,7 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
                   </div>
                   {message.role === "user" && (
                     <Avatar>
-                      <AvatarFallback>You</AvatarFallback>
+                      <AvatarFallback><User /></AvatarFallback>
                     </Avatar>
                   )}
                 </div>
@@ -76,7 +76,7 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
                {loading && (
                 <div className="flex items-start gap-3">
                   <Avatar>
-                    <AvatarFallback>AI</AvatarFallback>
+                    <AvatarFallback><Lightbulb /></AvatarFallback>
                   </Avatar>
                   <div className="rounded-lg p-3 bg-secondary flex items-center">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
