@@ -73,16 +73,14 @@ export default function NotesPage({ params }: { params: { sessionId: string } })
             </div>
           </div>
         </div>
-        <div className="mt-6">
-          <div className="p-6 bg-secondary rounded-lg h-[calc(100vh-16rem)] overflow-auto">
-            {loading ? (
-              <div className="flex justify-center items-center h-full">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              </div>
-            ) : (
-              <MarkdownRenderer content={notes} />
-            )}
-          </div>
+        <div className="mt-6 h-[calc(100vh-16rem)] overflow-auto">
+          {loading ? (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+          ) : (
+            <MarkdownRenderer content={notes} />
+          )}
         </div>
       </div>
   );
