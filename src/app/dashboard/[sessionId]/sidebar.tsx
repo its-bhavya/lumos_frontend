@@ -11,7 +11,6 @@ import {
   BrainCircuit,
 } from "lucide-react";
 import { Logo } from "@/components/icons";
-import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
@@ -66,7 +65,6 @@ export default function DashboardSidebar({
                 New Session
               </Link>
             </Button>
-            <ModeToggle />
         </div>
     </aside>
   );
