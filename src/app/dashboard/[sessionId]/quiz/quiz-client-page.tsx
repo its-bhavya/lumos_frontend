@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { evaluateAnswer } from "@/app/actions";
-import { Check, ChevronsRight, Loader2, Sparkles, X, ArrowLeft, Info } from "lucide-react";
+import { Check, ChevronsRight, Loader2, Sparkles, X, ArrowLeft, Info, SkipForward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -63,6 +63,26 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
       answerType: "short",
     },
   });
+
+  useEffect(() => {
+    // When the question index changes, check if there's an existing result
+    // for the new question and populate the fields.
+    const resultForCurrentQuestion = quizResults.find(
+      (r) => r.question_num === quizData?.quiz_questions[currentQuestionIndex]?.question_num
+    );
+    if (resultForCurrentQuestion) {
+      setUserAnswer(resultForCurrentQuestion.userAnswer);
+      setEvaluation({
+        score: resultForCurrentQuestion.score,
+        feedback: resultForCurrentQuestion.feedback,
+        correct_answer: resultForCurrentQuestion.correctAnswer,
+      });
+    } else {
+      setUserAnswer('');
+      setEvaluation(null);
+    }
+  }, [currentQuestionIndex, quizData, quizResults]);
+
 
   async function onStartQuiz(values: z.infer<typeof formSchema>) {
     setQuizState('loading');
@@ -137,35 +157,26 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
 
     if (!isLastQuestion) {
         setCurrentQuestionIndex(prev => prev + 1);
-        setUserAnswer('');
-        setEvaluation(null);
     } else {
         setQuizState('finished');
-        // We use local storage to pass results to the summary page,
-        // because the backend's finish_quiz doesn't take the results directly.
         localStorage.setItem(`quizSession_${sessionId}`, "active");
         router.push(`/dashboard/${sessionId}/quiz/summary`);
     }
   };
 
+  const handleSkipQuestion = () => {
+     handleNextQuestion();
+  }
+
   const goToQuestion = (index: number) => {
-    // Allow navigation only to answered questions or the current one.
-    if (index < quizResults.length) {
-      setCurrentQuestionIndex(index);
-      const pastResult = quizResults[index];
-      setUserAnswer(pastResult.userAnswer);
-      // We set evaluation to show the past result feedback
-      setEvaluation({
-          score: pastResult.score,
-          feedback: pastResult.feedback,
-          correct_answer: pastResult.correctAnswer
-      });
-    }
+    setCurrentQuestionIndex(index);
   }
   
-  const progress = quizData ? ((currentQuestionIndex + 1) / quizData.quiz_questions.length) * 100 : 0;
+  const answeredQuestionsCount = quizData ? quizResults.length : 0;
+  const totalQuestionsCount = quizData ? quizData.quiz_questions.length : 0;
+  const progress = totalQuestionsCount > 0 ? (answeredQuestionsCount / totalQuestionsCount) * 100 : 0;
   const currentQuestion = quizData?.quiz_questions[currentQuestionIndex];
-
+  
   if (quizState === 'loading') {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center space-y-4">
@@ -184,20 +195,22 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
            <div className="flex items-center justify-between">
               <div className="w-24"></div>
               <div className="flex gap-2 items-center text-muted-foreground font-medium">
-                  {quizData?.quiz_questions.map((q, index) => (
-                      <button 
-                        key={q.question_num}
-                        onClick={() => goToQuestion(index)}
-                        disabled={index >= quizResults.length}
-                        className={cn(
-                            "h-8 w-8 rounded-full flex items-center justify-center transition-colors",
-                            index === currentQuestionIndex ? "bg-primary text-primary-foreground" : "bg-secondary",
-                            index < quizResults.length ? "hover:bg-primary/80" : "cursor-not-allowed"
-                        )}
-                      >
-                        {index + 1}
-                      </button>
-                  ))}
+                  {quizData?.quiz_questions.map((q, index) => {
+                       const isAnswered = quizResults.some(r => r.question_num === q.question_num);
+                       return (
+                        <button 
+                          key={q.question_num}
+                          onClick={() => goToQuestion(index)}
+                          className={cn(
+                              "h-8 w-8 rounded-full flex items-center justify-center transition-colors",
+                              index === currentQuestionIndex ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-primary/80",
+                               isAnswered && index !== currentQuestionIndex ? "bg-green-300 dark:bg-green-700" : ""
+                          )}
+                        >
+                          {index + 1}
+                        </button>
+                       )
+                  })}
               </div>
               <div className="w-24"></div>
           </div>
@@ -219,6 +232,10 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
               {!evaluation ? (
                  <div className="flex gap-2">
                     <Button onClick={handleAnswerSubmit} disabled={!userAnswer} className="w-full">Submit Answer</Button>
+                    <Button onClick={handleSkipQuestion} variant="outline">
+                        <SkipForward className="mr-2 h-4 w-4"/>
+                        Skip
+                    </Button>
                  </div>
               ) : (
                 <div className="space-y-4">
@@ -304,7 +321,7 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Answer Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValue-change={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select answer type" /></SelectTrigger>
                       </FormControl>
