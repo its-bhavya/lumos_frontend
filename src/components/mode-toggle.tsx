@@ -4,11 +4,23 @@ import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
-import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 
 export function ModeToggle() {
   const { setTheme, theme } = useTheme()
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    // Render a placeholder or nothing on the server to prevent hydration mismatch
+    return (
+        <div className="flex items-center space-x-2 h-6 w-[76px]">
+        </div>
+    );
+  }
 
   const handleToggle = (isChecked: boolean) => {
     setTheme(isChecked ? "dark" : "light")
