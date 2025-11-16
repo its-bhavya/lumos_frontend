@@ -12,13 +12,15 @@ export default function NotesPage({ params }: { params: { sessionId: string } })
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { sessionId } = params;
 
   useEffect(() => {
     const fetchNotes = async () => {
+      if (!sessionId) return;
       setLoading(true);
       try {
         const formData = new FormData();
-        formData.append('session_id', params.sessionId);
+        formData.append('session_id', sessionId);
         const response = await fetch(`${BACKEND_URL}/get_notes`, {
           method: 'POST',
           body: formData,
@@ -43,7 +45,7 @@ export default function NotesPage({ params }: { params: { sessionId: string } })
       }
     };
     fetchNotes();
-  }, [params.sessionId, toast]);
+  }, [sessionId, toast]);
 
   const downloadNotes = () => {
     const blob = new Blob([notes], { type: 'text/markdown;charset=utf-8' });
