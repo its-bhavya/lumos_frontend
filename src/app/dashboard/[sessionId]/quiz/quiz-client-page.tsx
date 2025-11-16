@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -24,7 +25,7 @@ type QuizQuestion = {
 };
 
 type GenerateQuizOutput = {
-    questions: QuizQuestion[];
+    quiz_questions: QuizQuestion[];
 }
 
 const formSchema = z.object({
@@ -70,9 +71,9 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
       formData.append('session_id', sessionId);
       formData.append('num_questions', values.numberOfQuestions);
       formData.append('difficulty', values.difficulty);
-      formData.append('question_type', values.answerType);
+      formData.append('type', values.answerType);
 
-      const response = await fetch(`${BACKEND_URL}/generate_quiz`, {
+      const response = await fetch(`${BACKEND_URL}/get_quiz_questions`, {
           method: 'POST',
           body: formData,
       });
@@ -98,7 +99,7 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
 
   const handleAnswerSubmit = async () => {
     if (!quizData) return;
-    const currentQuestion = quizData.questions[currentQuestionIndex];
+    const currentQuestion = quizData.quiz_questions[currentQuestionIndex];
     try {
         const result = await evaluateAnswer(sessionId, currentQuestion.question_num, userAnswer);
         setEvaluation(result);
@@ -132,7 +133,7 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   };
 
   const handleNextQuestion = () => {
-    const isLastQuestion = quizData && currentQuestionIndex === quizData.questions.length - 1;
+    const isLastQuestion = quizData && currentQuestionIndex === quizData.quiz_questions.length - 1;
 
     if (!isLastQuestion) {
         setCurrentQuestionIndex(prev => prev + 1);
@@ -162,8 +163,8 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
     }
   }
   
-  const progress = quizData ? ((currentQuestionIndex + 1) / quizData.questions.length) * 100 : 0;
-  const currentQuestion = quizData?.questions[currentQuestionIndex];
+  const progress = quizData ? ((currentQuestionIndex + 1) / quizData.quiz_questions.length) * 100 : 0;
+  const currentQuestion = quizData?.quiz_questions[currentQuestionIndex];
 
   if (quizState === 'loading') {
     return (
@@ -183,7 +184,7 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
            <div className="flex items-center justify-between">
               <div className="w-24"></div>
               <div className="flex gap-2 items-center text-muted-foreground font-medium">
-                  {quizData?.questions.map((q, index) => (
+                  {quizData?.quiz_questions.map((q, index) => (
                       <button 
                         key={q.question_num}
                         onClick={() => goToQuestion(index)}
@@ -222,13 +223,13 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
               ) : (
                 <div className="space-y-4">
                    {evaluation && (
-                    <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 100 ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : evaluation.score >= 50 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
-                        {evaluation.score === 100 ? <Check className="h-5 w-5 mt-0.5"/> : <X className="h-5 w-5 mt-0.5"/>}
+                    <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : evaluation.score >= 0.5 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
+                        {evaluation.score === 1 ? <Check className="h-5 w-5 mt-0.5"/> : <X className="h-5 w-5 mt-0.5"/>}
                         <p className="font-medium">{evaluation.feedback}</p>
                     </div>
                    )}
                   <Button onClick={handleNextQuestion} className="w-full">
-                    {quizData && currentQuestionIndex === quizData.questions.length - 1 ? 'Finish & See Results' : 'Next Question'}
+                    {quizData && currentQuestionIndex === quizData.quiz_questions.length - 1 ? 'Finish & See Results' : 'Next Question'}
                     <ChevronsRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>

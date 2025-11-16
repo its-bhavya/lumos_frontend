@@ -28,7 +28,7 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
         // Step 2: Generate mindmap
         const mindmapFormData = new FormData();
         mindmapFormData.append('session_id', params.sessionId);
-        const mindmapRes = await fetch(`${BACKEND_URL}/mindmap`, { method: 'POST', body: mindmapFormData });
+        const mindmapRes = await fetch(`${BACKEND_URL}/generate_mindmap`, { method: 'POST', body: mindmapFormData });
         if (!mindmapRes.ok) throw new Error("Failed to generate the mind map image.");
         
         // The backend returns the image blob directly
@@ -51,6 +51,18 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
     generateMindMap();
   }, [params.sessionId, toast]);
 
+  const downloadImage = () => {
+    if (!mindMapUrl) return;
+    const link = document.createElement('a');
+    link.href = mindMapUrl;
+    // The backend now returns SVG, so let's name it appropriately.
+    link.download = "mindmap.svg"; 
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
   return (
       <div className="w-full">
         <div>
@@ -60,11 +72,11 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
               <p className="text-lg pt-2 text-muted-foreground">Here is a visualization of your study materials.</p>
             </div>
             <div className="flex gap-2">
-                <Button variant="outline" asChild disabled={!mindMapUrl || loading}>
-                <a href={mindMapUrl || ""} download="mindmap.png">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Image
-                </a>
+                <Button onClick={downloadImage} variant="outline" asChild={false} disabled={!mindMapUrl || loading}>
+                    <span>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download SVG
+                    </span>
                 </Button>
             </div>
           </div>

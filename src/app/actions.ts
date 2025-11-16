@@ -1,3 +1,4 @@
+
 "use server";
 
 import { v4 as uuidv4 } from 'uuid';
@@ -67,10 +68,9 @@ export async function evaluateAnswer(sessionId: string, questionNum: number, use
   
   const data = await response.json();
 
-  // The backend returns score 0, 0.5, or 1. We convert to percentage.
-  // It also returns `missing_keypoints` which we can use in feedback.
+  // The backend returns score 0, 0.5, or 1.
   return {
-    score: data.score * 100,
+    score: data.score,
     feedback: data.feedback,
     correct_answer: data.correct_answer || 'N/A'
   };
@@ -93,7 +93,7 @@ export async function finishQuiz(sessionId: string): Promise<{ accuracy: number;
   const summary = await response.json();
   
   return {
-    accuracy: parseFloat(summary.overall_accuracy.toFixed(1)),
+    accuracy: summary.accuracy,
     strong_topics: summary.strong_topics,
     weak_topics: summary.weak_topics,
     topic_strength: summary.topic_strength
