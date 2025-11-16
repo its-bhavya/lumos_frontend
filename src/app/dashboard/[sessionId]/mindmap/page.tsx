@@ -18,13 +18,11 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
     const generateMindMap = async () => {
       setLoading(true);
       try {
-        // Step 1: Extract structure
         const extractFormData = new FormData();
         extractFormData.append('session_id', params.sessionId);
         const extractRes = await fetch(`${BACKEND_URL}/extract`, { method: 'POST', body: extractFormData });
         if (!extractRes.ok) throw new Error("Failed to extract concepts for mind map.");
 
-        // Step 2: Generate mindmap
         const mindmapFormData = new FormData();
         mindmapFormData.append('session_id', params.sessionId);
         const mindmapRes = await fetch(`${BACKEND_URL}/generate_mindmap`, { method: 'POST', body: mindmapFormData });
@@ -62,41 +60,37 @@ export default function MindMapPage({ params }: { params: { sessionId: string } 
 
   return (
       <div className="w-full h-full flex flex-col">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start mb-6">
           <div>
             <h2 className="font-headline text-4xl">Generated Mind Map</h2>
             <p className="text-lg pt-2 text-muted-foreground">Here is a visualization of your study materials.</p>
           </div>
-          <div className="flex gap-2">
-              <Button onClick={downloadImage} variant="outline" asChild={false} disabled={!mindMapUrl || loading}>
-                  <span>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download SVG
-                  </span>
-              </Button>
-          </div>
+          <Button onClick={downloadImage} variant="outline" asChild={false} disabled={!mindMapUrl || loading}>
+              <span>
+                <Download className="mr-2 h-4 w-4" />
+                Download SVG
+              </span>
+          </Button>
         </div>
-        <div className="mt-6 flex-1">
-          <div 
-            className="w-full h-full bg-secondary rounded-lg p-4 overflow-hidden border relative flex items-center justify-center"
-          >
+        <div className="mt-6 flex-1 w-full overflow-auto">
             {loading ? (
-                 <div className="flex flex-col items-center gap-4 text-primary">
+                 <div className="flex flex-col items-center justify-center h-full gap-4 text-primary">
                     <Loader2 className="h-12 w-12 animate-spin" />
                     <p className="font-semibold">Generating your mind map...</p>
                  </div>
             ) : mindMapUrl ? (
-                <Image 
+                // eslint-disable-next-line @next/next/no-img-element
+                <img 
                     src={mindMapUrl}
                     alt="Generated Mind Map"
-                    layout="fill"
-                    objectFit="contain"
+                    className="w-full h-auto"
                     data-ai-hint="concept map"
                 />
             ) : (
-                <p className="text-muted-foreground">Could not load mind map.</p>
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">Could not load mind map.</p>
+                </div>
             )}
-          </div>
         </div>
       </div>
   );
