@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { evaluateAnswer } from "@/app/actions";
-import { Check, ChevronsRight, Loader2, Sparkles, X } from "lucide-react";
+import { Check, ChevronsRight, Loader2, Sparkles, X, ArrowLeft } from "lucide-react";
 
 type QuizState = 'config' | 'loading' | 'active' | 'finished';
 
@@ -129,10 +130,17 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
     return (
       <div className="container py-12 flex justify-center">
         <div className="w-full max-w-3xl space-y-6">
-          <div>
-              <p className="text-center text-muted-foreground font-medium mb-2">Question {currentQuestionIndex + 1} of {quizData?.questions.length}</p>
-              <Progress value={progress} />
+          <div className="flex items-center justify-between">
+              <Button asChild variant="outline" size="sm">
+                  <Link href={`/dashboard/${sessionId}`}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Link>
+              </Button>
+              <div className="text-center text-muted-foreground font-medium">Question {currentQuestionIndex + 1} of {quizData?.questions.length}</div>
+              <div className="w-24"></div>
           </div>
+          <Progress value={progress} />
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl leading-relaxed">{currentQuestion.question}</CardTitle>
@@ -154,7 +162,7 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
                  </div>
               ) : (
                 <div className="space-y-4">
-                   <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 100 ? 'bg-green-100 text-green-800' : evaluation.score > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                   <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 100 ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : evaluation.score > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
                         {evaluation.score === 100 ? <Check className="h-5 w-5 mt-0.5"/> : <X className="h-5 w-5 mt-0.5"/>}
                         <p className="font-medium">{evaluation.feedback}</p>
                     </div>
@@ -174,9 +182,17 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   return (
     <div className="container py-12 flex justify-center">
       <Card className="w-full max-w-lg shadow-lg">
-        <CardHeader>
-          <CardTitle className="font-headline text-3xl">Quiz Setup</CardTitle>
-          <CardDescription>Configure your quiz and start testing your knowledge.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="font-headline text-3xl">Quiz Setup</CardTitle>
+            <CardDescription>Configure your quiz and start testing your knowledge.</CardDescription>
+          </div>
+          <Button asChild variant="outline">
+              <Link href={`/dashboard/${sessionId}`}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Link>
+          </Button>
         </CardHeader>
         <CardContent>
           <Form {...form}>

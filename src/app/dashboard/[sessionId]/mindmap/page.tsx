@@ -1,7 +1,8 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, ArrowLeft } from "lucide-react";
 
 export default async function MindMapPage({ params }: { params: { sessionId: string } }) {
 
@@ -16,12 +17,20 @@ export default async function MindMapPage({ params }: { params: { sessionId: str
               <CardTitle className="font-headline text-4xl">Generated Mind Map</CardTitle>
               <CardDescription className="text-lg pt-2">Here is a visualization of your study materials.</CardDescription>
             </div>
-            <Button variant="outline" asChild>
-              <a href={placeholderImageUrl} download="mindmap.jpg">
-                <Download className="mr-2 h-4 w-4" />
-                Download Image
-              </a>
-            </Button>
+            <div className="flex gap-2">
+                <Button variant="outline" asChild>
+                <a href={placeholderImageUrl} download="mindmap.jpg">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Image
+                </a>
+                </Button>
+                 <Button asChild variant="outline">
+                    <Link href={`/dashboard/${params.sessionId}`}>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back
+                    </Link>
+                </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, ArrowLeft } from "lucide-react";
 import MarkdownRenderer from "@/components/markdown-renderer";
 
 const placeholderNotes = `
@@ -41,10 +42,18 @@ export default async function NotesPage({ params }: { params: { sessionId: strin
               <CardTitle className="font-headline text-4xl">Generated Notes</CardTitle>
               <CardDescription className="text-lg pt-2">Here is a summary of your study materials.</CardDescription>
             </div>
-            <Button variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Download as PDF
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Download as PDF
+              </Button>
+               <Button asChild variant="outline">
+                  <Link href={`/dashboard/${params.sessionId}`}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Link>
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
