@@ -24,7 +24,7 @@ export default function LandingPageClient() {
   };
 
   return (
-    <main className="relative flex h-full flex-col items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-100 via-blue-200 to-blue-300 p-8 text-center dark:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] dark:from-gray-900 dark:via-gray-950 dark:to-black">
+    <main className="relative flex h-full flex-col items-center justify-center p-8 text-center bg-background">
       <div className="absolute top-4 right-4">
         <ModeToggle />
       </div>
