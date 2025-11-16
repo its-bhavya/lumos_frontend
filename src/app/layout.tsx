@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider";
 import './globals.css';
+import { ModeToggle } from '@/components/mode-toggle';
 
 export const metadata: Metadata = {
   title: 'Lumos AI Study',
