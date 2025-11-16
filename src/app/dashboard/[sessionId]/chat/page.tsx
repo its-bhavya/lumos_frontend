@@ -7,11 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Send, Lightbulb, User } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 type Message = {
   role: "user" | "ai";
   content: string;
 };
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function ChatPage({ params }: { params: { sessionId: string } }) {
   const [messages, setMessages] = useState<Message[]>([
@@ -20,6 +23,7 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -29,12 +33,36 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
     setLoading(true);
     setInput("");
 
-    // Simulate API call and response
-    setTimeout(() => {
-      const aiMessage: Message = { role: "ai", content: "This is a placeholder response from the chatbot." };
+    try {
+      const formData = new FormData();
+      formData.append('session_id', params.sessionId);
+      formData.append('question', input);
+
+      const response = await fetch(`${BACKEND_URL}/ask`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('The request to the chatbot failed.');
+      }
+      
+      const data = await response.json();
+      const aiMessage: Message = { role: "ai", content: data.answer };
       setMessages((prev) => [...prev, aiMessage]);
-      setLoading(false);
-    }, 1000);
+
+    } catch (error) {
+      console.error("Chat API error:", error);
+      const errorMessage: Message = { role: 'ai', content: "Sorry, I couldn't get a response. Please try again."};
+      setMessages(prev => [...prev, errorMessage]);
+      toast({
+        variant: "destructive",
+        title: "Chat Error",
+        description: "There was an issue communicating with the chatbot.",
+      });
+    } finally {
+        setLoading(false);
+    }
   };
   
   useEffect(() => {

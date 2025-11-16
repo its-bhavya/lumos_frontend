@@ -1,36 +1,62 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import MarkdownRenderer from "@/components/markdown-renderer";
+import { useToast } from "@/hooks/use-toast";
 
-const placeholderNotes = `
-# Placeholder Study Notes
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-Here is a summary of your study materials, generated as a placeholder. You can replace this with a call to your backend API.
+export default function NotesPage({ params }: { params: { sessionId: string } }) {
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-## Key Concept 1: The Mitochondria
+  useEffect(() => {
+    const fetchNotes = async () => {
+      setLoading(true);
+      try {
+        const formData = new FormData();
+        formData.append('session_id', params.sessionId);
+        const response = await fetch(`${BACKEND_URL}/get_notes`, {
+          method: 'POST',
+          body: formData,
+        });
 
-- Often called the "powerhouse of the cell".
-- Generates most of the cell's supply of adenosine triphosphate (ATP).
-- ATP is used as a source of chemical energy.
+        if (!response.ok) {
+          throw new Error('Failed to fetch notes.');
+        }
 
-## Key Concept 2: The French Revolution
+        const data = await response.json();
+        setNotes(data.notes);
+      } catch (error) {
+        console.error(error);
+        toast({
+          variant: "destructive",
+          title: "Error fetching notes",
+          description: "Could not load notes from the server.",
+        });
+        setNotes("# Error\n\nCould not load notes.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNotes();
+  }, [params.sessionId, toast]);
 
-- A period of radical political and societal change in France.
-- Began in 1789 and ended in 1799.
-- Key figures included Napoleon Bonaparte and Robespierre.
-- Led to the end of the monarchy in France.
-
-## Key Concept 3: Binary Trees in Computing
-
-*   A tree data structure.
-*   Each node has at most two children.
-*   Children are referred to as the left child and the right child.
-*   Fundamental for many search and sort algorithms.
-`;
-
-export default async function NotesPage({ params }: { params: { sessionId: string } }) {
-  const notes = placeholderNotes;
+  const downloadNotes = () => {
+    const blob = new Blob([notes], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'notes.md';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 
   return (
       <Card className="w-full shadow-lg">
@@ -41,16 +67,22 @@ export default async function NotesPage({ params }: { params: { sessionId: strin
               <CardDescription className="text-lg pt-2">Here is a summary of your study materials.</CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline">
+              <Button variant="outline" onClick={downloadNotes} disabled={loading || !notes}>
                 <Download className="mr-2 h-4 w-4" />
-                Download as PDF
+                Download as MD
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="p-6 bg-secondary rounded-lg h-[calc(100vh-16rem)] overflow-auto">
-            <MarkdownRenderer content={notes} />
+            {loading ? (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              </div>
+            ) : (
+              <MarkdownRenderer content={notes} />
+            )}
           </div>
         </CardContent>
       </Card>

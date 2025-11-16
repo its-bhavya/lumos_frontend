@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -15,25 +14,18 @@ import { Progress } from "@/components/ui/progress";
 import { evaluateAnswer } from "@/app/actions";
 import { Check, ChevronsRight, Loader2, Sparkles, X, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 type QuizState = 'config' | 'loading' | 'active' | 'finished';
 
 type QuizQuestion = {
+    question_num: number;
     question: string;
-    answer: string;
 };
 
 type GenerateQuizOutput = {
     questions: QuizQuestion[];
 }
-
-const placeholderQuiz: GenerateQuizOutput = {
-    questions: [
-      { question: "What is the powerhouse of the cell?", answer: "Mitochondria" },
-      { question: "Who was a key figure in the French Revolution?", answer: "Napoleon Bonaparte" },
-      { question: "In computing, what is a tree data structure where each node has at most two children?", answer: "Binary Tree" },
-    ],
-  };
 
 const formSchema = z.object({
   numberOfQuestions: z.string(),
@@ -42,6 +34,7 @@ const formSchema = z.object({
 });
 
 type QuizResult = {
+  question_num: number;
   question: string;
   userAnswer: string;
   correctAnswer: string;
@@ -49,14 +42,17 @@ type QuizResult = {
   feedback: string;
 };
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   const [quizState, setQuizState] = useState<QuizState>('config');
   const [quizData, setQuizData] = useState<GenerateQuizOutput | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
-  const [evaluation, setEvaluation] = useState<{ score: number, feedback: string } | null>(null);
+  const [evaluation, setEvaluation] = useState<{ score: number, feedback: string, correct_answer: string } | null>(null);
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
   const router = useRouter();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,68 +65,100 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
 
   async function onStartQuiz(values: z.infer<typeof formSchema>) {
     setQuizState('loading');
-    // Simulate API call to generate quiz
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setQuizData(placeholderQuiz);
-    setQuizState('active');
+    try {
+      const formData = new FormData();
+      formData.append('session_id', sessionId);
+      formData.append('num_questions', values.numberOfQuestions);
+      formData.append('difficulty', values.difficulty);
+      formData.append('question_type', values.answerType);
+
+      const response = await fetch(`${BACKEND_URL}/generate_quiz`, {
+          method: 'POST',
+          body: formData,
+      });
+
+      if (!response.ok) {
+          throw new Error('Failed to generate quiz');
+      }
+
+      const generatedQuiz: GenerateQuizOutput = await response.json();
+      setQuizData(generatedQuiz);
+      setQuizState('active');
+
+    } catch (error) {
+        console.error("Quiz generation error:", error);
+        toast({
+            variant: "destructive",
+            title: "Quiz Generation Failed",
+            description: "There was a problem creating your quiz. Please try again."
+        });
+        setQuizState('config');
+    }
   }
 
   const handleAnswerSubmit = async () => {
     if (!quizData) return;
     const currentQuestion = quizData.questions[currentQuestionIndex];
-    const result = await evaluateAnswer(userAnswer, currentQuestion.answer);
-    setEvaluation(result);
-    setQuizResults(prev => [...prev, {
-        question: currentQuestion.question,
-        userAnswer: userAnswer,
-        correctAnswer: currentQuestion.answer,
-        ...result
-    }]);
+    try {
+        const result = await evaluateAnswer(sessionId, currentQuestion.question_num, userAnswer);
+        setEvaluation(result);
+        const newResult: QuizResult = {
+            question_num: currentQuestion.question_num,
+            question: currentQuestion.question,
+            userAnswer: userAnswer,
+            correctAnswer: result.correct_answer,
+            score: result.score,
+            feedback: result.feedback,
+        };
+        // Replace if already answered, else add
+        setQuizResults(prev => {
+            const existingIndex = prev.findIndex(r => r.question_num === currentQuestion.question_num);
+            if(existingIndex > -1) {
+                const updated = [...prev];
+                updated[existingIndex] = newResult;
+                return updated;
+            }
+            return [...prev, newResult];
+        });
+
+    } catch(error) {
+        console.error("Answer evaluation error:", error);
+        toast({
+            variant: "destructive",
+            title: "Evaluation Failed",
+            description: "Could not submit your answer. Please try again."
+        });
+    }
   };
 
   const handleNextQuestion = () => {
     const isLastQuestion = quizData && currentQuestionIndex === quizData.questions.length - 1;
-    if (quizData && !isLastQuestion) {
-        const newQuizResults = [...quizResults];
-        if(!evaluation) { // if user skipped question
-            const currentQuestion = quizData.questions[currentQuestionIndex];
-            newQuizResults.push({
-                question: currentQuestion.question,
-                userAnswer: 'Skipped',
-                correctAnswer: currentQuestion.answer,
-                score: 0,
-                feedback: `The correct answer is: "${currentQuestion.answer}"`
-            });
-            setQuizResults(newQuizResults);
-        }
 
+    if (!isLastQuestion) {
         setCurrentQuestionIndex(prev => prev + 1);
         setUserAnswer('');
         setEvaluation(null);
     } else {
         setQuizState('finished');
-        let finalResults = [...quizResults];
-        if(!evaluation && quizData) { // if user skips last question
-          const currentQuestion = quizData.questions[currentQuestionIndex];
-          finalResults.push({
-              question: currentQuestion.question,
-              userAnswer: 'Skipped',
-              correctAnswer: currentQuestion.answer,
-              score: 0,
-              feedback: `The correct answer is: "${currentQuestion.answer}"`
-          });
-        }
-        localStorage.setItem(`quizResults_${sessionId}`, JSON.stringify(finalResults));
+        // We use local storage to pass results to the summary page,
+        // because the backend's finish_quiz doesn't take the results directly.
+        localStorage.setItem(`quizSession_${sessionId}`, "active");
         router.push(`/dashboard/${sessionId}/quiz/summary`);
     }
   };
 
   const goToQuestion = (index: number) => {
-    if (index < currentQuestionIndex) {
+    // Allow navigation only to answered questions or the current one.
+    if (index < quizResults.length) {
       setCurrentQuestionIndex(index);
       const pastResult = quizResults[index];
       setUserAnswer(pastResult.userAnswer);
-      setEvaluation(null); // Don't show evaluation when going back
+      // We set evaluation to show the past result feedback
+      setEvaluation({
+          score: pastResult.score,
+          feedback: pastResult.feedback,
+          correct_answer: pastResult.correctAnswer
+      });
     }
   }
   
@@ -147,21 +175,23 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   }
 
   if (quizState === 'active' && currentQuestion) {
+    const isQuestionAnswered = quizResults.some(r => r.question_num === currentQuestion.question_num);
+
     return (
       <div className="container py-12 flex justify-center">
         <div className="w-full max-w-4xl space-y-6">
            <div className="flex items-center justify-between">
               <div className="w-24"></div>
               <div className="flex gap-2 items-center text-muted-foreground font-medium">
-                  {quizData?.questions.map((_, index) => (
+                  {quizData?.questions.map((q, index) => (
                       <button 
-                        key={index}
+                        key={q.question_num}
                         onClick={() => goToQuestion(index)}
-                        disabled={index >= currentQuestionIndex && !evaluation}
+                        disabled={index >= quizResults.length}
                         className={cn(
                             "h-8 w-8 rounded-full flex items-center justify-center transition-colors",
                             index === currentQuestionIndex ? "bg-primary text-primary-foreground" : "bg-secondary",
-                            index < currentQuestionIndex ? "hover:bg-primary/80" : "cursor-not-allowed"
+                            index < quizResults.length ? "hover:bg-primary/80" : "cursor-not-allowed"
                         )}
                       >
                         {index + 1}
@@ -181,19 +211,18 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
                 rows={4}
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
-                disabled={!!evaluation || currentQuestionIndex < quizResults.length}
+                disabled={!!evaluation}
               />
             </CardContent>
             <CardFooter className="flex-col items-stretch gap-4">
-              {!evaluation && currentQuestionIndex === quizResults.length ? (
+              {!evaluation ? (
                  <div className="flex gap-2">
                     <Button onClick={handleAnswerSubmit} disabled={!userAnswer} className="w-full">Submit Answer</Button>
-                    <Button onClick={handleNextQuestion} variant="outline" className="w-full">Skip</Button>
                  </div>
               ) : (
                 <div className="space-y-4">
                    {evaluation && (
-                    <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 100 ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : evaluation.score > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
+                    <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 100 ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : evaluation.score >= 50 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}`}>
                         {evaluation.score === 100 ? <Check className="h-5 w-5 mt-0.5"/> : <X className="h-5 w-5 mt-0.5"/>}
                         <p className="font-medium">{evaluation.feedback}</p>
                     </div>

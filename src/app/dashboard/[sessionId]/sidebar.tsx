@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   MessageSquare,
   FileText,
@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import { resetSession } from "@/app/actions";
+import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { href: "", icon: Home, label: "Dashboard" },
@@ -28,6 +30,25 @@ export default function DashboardSidebar({
 }) {
   const pathname = usePathname();
   const baseDashboardPath = `/dashboard/${sessionId}`;
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleNewSession = async () => {
+    const success = await resetSession(sessionId);
+    if (success) {
+      toast({
+        title: "Session Reset",
+        description: "Your session has been cleared. Let's start fresh!",
+      });
+      router.push('/');
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Failed to Reset Session",
+        description: "There was an issue starting a new session. Please try again.",
+      });
+    }
+  }
 
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-56 flex-col border-r bg-background sm:flex">
@@ -59,11 +80,9 @@ export default function DashboardSidebar({
           })}
         </nav>
         <div className="mt-auto flex flex-col items-center gap-4 p-4">
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/">
-                <BrainCircuit className="mr-2 h-5 w-5" />
-                New Session
-              </Link>
+            <Button onClick={handleNewSession} variant="outline" className="w-full">
+              <BrainCircuit className="mr-2 h-5 w-5" />
+              New Session
             </Button>
         </div>
     </aside>

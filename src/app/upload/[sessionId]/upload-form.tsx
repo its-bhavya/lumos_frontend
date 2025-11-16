@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { File, Youtube, Mic, FileText, Upload, CheckCircle, Loader2, BrainCircuit } from 'lucide-react';
+import { File as FileIcon, Youtube, Mic, FileText, Upload, CheckCircle, Loader2, BrainCircuit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { buildIndex, uploadResource } from '@/app/actions';
 import { cn } from '@/lib/utils';
 
 type Resource = {
@@ -23,23 +22,37 @@ type UploadCardProps = {
   description: string;
   inputType: 'file' | 'text';
   inputPlaceholder: string;
-  onUpload: (name: string, type: 'PDF' | 'YouTube' | 'Audio' | 'Text') => void;
+  onUpload: (name: string, type: 'PDF' | 'YouTube' | 'Audio' | 'Text', data: File | string) => Promise<void>;
   fileType?: 'PDF' | 'Audio';
 };
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 function UploadCard({ icon, title, description, inputType, inputPlaceholder, onUpload, fileType }: UploadCardProps) {
     const [value, setValue] = useState('');
     const [fileName, setFileName] = useState('');
+    const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
   
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!value && !fileName) return;
+      if ((inputType === 'file' && !file) || (inputType === 'text' && !value.trim())) return;
+      
       setLoading(true);
-      await onUpload(fileType ? fileName : value, fileType || (title as 'YouTube' | 'Text'));
+      const uploadName = inputType === 'file' ? file!.name : value;
+      const uploadData = inputType === 'file' ? file! : value;
+      const uploadType = fileType || (title.includes('YouTube') ? 'YouTube' : 'Text');
+      
+      await onUpload(uploadName, uploadType, uploadData);
+      
       setLoading(false);
       setValue('');
       setFileName('');
+      setFile(null);
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
     };
 
   return (
@@ -54,15 +67,16 @@ function UploadCard({ icon, title, description, inputType, inputPlaceholder, onU
         </div>
         <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
             {inputType === 'file' ? (
-                 <label className="flex-1 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer">
+                 <label className="flex-1 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer flex items-center">
                     <span className={cn("truncate", fileName ? 'text-foreground' : 'text-muted-foreground')}>{fileName || 'Select a file'}</span>
                     <Input 
-                        type="file" 
+                        type="file"
+                        ref={inputRef}
                         className="sr-only"
                         onChange={(e) => {
                             if(e.target.files && e.target.files.length > 0) {
                                 setFileName(e.target.files[0].name);
-                                setValue(e.target.files[0].name); // for validation
+                                setFile(e.target.files[0]);
                             }
                         }}
                         accept={fileType === 'PDF' ? '.pdf' : '.mp3,.wav,.m4a'}
@@ -92,25 +106,59 @@ export default function UploadForm({ sessionId }: { sessionId: string }) {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleUpload = async (name: string, type: 'PDF' | 'YouTube' | 'Audio' | 'Text') => {
-    const { success, message } = await uploadResource(sessionId, type, name);
-    if (success) {
+  const handleUpload = async (name: string, type: 'PDF' | 'YouTube' | 'Audio' | 'Text', data: File | string) => {
+    let endpoint = '';
+    const formData = new FormData();
+    formData.append('session_id', sessionId);
+
+    switch(type) {
+      case 'PDF':
+        endpoint = `${BACKEND_URL}/upload_pdf`;
+        formData.append('file', data as File);
+        break;
+      case 'Audio':
+        endpoint = `${BACKEND_URL}/upload_audio`;
+        formData.append('file', data as File);
+        break;
+      case 'YouTube':
+        endpoint = `${BACKEND_URL}/add_youtube`;
+        formData.append('youtube_url', data as string);
+        break;
+      case 'Text':
+        endpoint = `${BACKEND_URL}/add_text`;
+        formData.append('text', data as string);
+        formData.append('source_name', 'Pasted Text');
+        break;
+    }
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Upload failed');
+      }
+
       const newResource: Resource = {
         id: `${type}-${Date.now()}`,
         name,
         type,
-        icon: type === 'PDF' ? <File /> : type === 'YouTube' ? <Youtube /> : type === 'Audio' ? <Mic /> : <FileText />,
+        icon: type === 'PDF' ? <FileIcon /> : type === 'YouTube' ? <Youtube /> : type === 'Audio' ? <Mic /> : <FileText />,
       };
       setResources(prev => [...prev, newResource]);
       toast({
         title: "Upload Successful",
         description: `Added "${name}" to your session.`,
       });
-    } else {
+
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Upload Failed",
-        description: message,
+        description: error instanceof Error ? error.message : "An unknown error occurred.",
       });
     }
   };
@@ -121,7 +169,7 @@ export default function UploadForm({ sessionId }: { sessionId: string }) {
   };
 
   const uploadCards: UploadCardProps[] = [
-    { icon: <File className="h-8 w-8" />, title: 'Upload PDF', description: 'Upload PDF documents.', inputType: 'file', inputPlaceholder: '', onUpload: handleUpload, fileType: 'PDF' },
+    { icon: <FileIcon className="h-8 w-8" />, title: 'Upload PDF', description: 'Upload PDF documents.', inputType: 'file', inputPlaceholder: '', onUpload: handleUpload, fileType: 'PDF' },
     { icon: <Youtube className="h-8 w-8" />, title: 'Add YouTube Video', description: 'Paste a YouTube URL.', inputType: 'text', inputPlaceholder: 'https://youtube.com/watch?v=...', onUpload: handleUpload },
     { icon: <Mic className="h-8 w-8" />, title: 'Upload Audio', description: 'Upload audio files.', inputType: 'file', inputPlaceholder: '', onUpload: handleUpload, fileType: 'Audio' },
     { icon: <FileText className="h-8 w-8" />, title: 'Paste Text', description: 'Paste raw text.', inputType: 'text', inputPlaceholder: 'Paste your notes here...', onUpload: handleUpload },

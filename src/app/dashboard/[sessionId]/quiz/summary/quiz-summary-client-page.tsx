@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { finishQuiz } from "@/app/actions";
 import { Loader2, ArrowLeft, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type QuizSummary = {
   accuracy: number;
@@ -18,30 +19,65 @@ type QuizSummary = {
 export default function QuizSummaryClientPage({ sessionId }: { sessionId: string }) {
   const [summary, setSummary] = useState<QuizSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchSummary = async () => {
-      const storedResults = localStorage.getItem(`quizResults_${sessionId}`);
-      const results = storedResults ? JSON.parse(storedResults) : [];
+      // Check if a quiz session was active to prevent direct navigation
+      const quizSession = localStorage.getItem(`quizSession_${sessionId}`);
+      if (!quizSession) {
+        setLoading(false);
+        // Redirect or show message? For now, just show empty state.
+        toast({
+            variant: "destructive",
+            title: "No Quiz Data Found",
+            description: "Please complete a quiz to see the summary.",
+        });
+        return;
+      }
       
-      const summaryData = await finishQuiz(sessionId, results);
-      setSummary(summaryData);
-      setLoading(false);
-      
-      // Clean up local storage
-      localStorage.removeItem(`quizResults_${sessionId}`);
+      try {
+        const summaryData = await finishQuiz(sessionId);
+        setSummary(summaryData);
+      } catch (error) {
+          console.error("Failed to fetch quiz summary", error);
+          toast({
+              variant: "destructive",
+              title: "Error loading summary",
+              description: "Could not retrieve your quiz results.",
+          });
+      } finally {
+        setLoading(false);
+        // Clean up local storage
+        localStorage.removeItem(`quizSession_${sessionId}`);
+      }
     };
 
     fetchSummary();
-  }, [sessionId]);
+  }, [sessionId, toast]);
 
-  if (loading || !summary) {
+  if (loading) {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center space-y-4">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
         <h1 className="font-headline text-4xl text-primary">Calculating Your Results...</h1>
       </div>
     );
+  }
+
+  if (!summary) {
+    return (
+        <div className="flex h-[70vh] flex-col items-center justify-center space-y-4">
+            <h1 className="font-headline text-4xl text-destructive">No summary available.</h1>
+            <p className="text-lg text-muted-foreground">Please take a quiz first.</p>
+             <Button asChild variant="outline" size="lg">
+              <Link href={`/dashboard/${sessionId}`}>
+                <ArrowLeft className="mr-2 h-5 w-5" />
+                Back to Dashboard
+              </Link>
+          </Button>
+        </div>
+    )
   }
 
   const chartData = Object.entries(summary.topic_strength).map(([name, value]) => ({ name, strength: value * 100 }));
