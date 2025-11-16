@@ -24,7 +24,7 @@ export default function LandingPageClient() {
   };
 
   return (
-    <main className="relative flex h-full flex-col items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-100 via-blue-200 to-blue-300 p-8 text-center" style={{'--tw-gradient-from': 'hsl(212, 100%, 92%)', '--tw-gradient-to': 'hsl(212, 100%, 87%)', '--tw-gradient-stops': 'var(--tw-gradient-from), var(--tw-gradient-to)'} as React.CSSProperties}>
+    <main className="relative flex h-full flex-col items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-100 via-blue-200 to-blue-300 p-8 text-center dark:from-gray-900 dark:via-gray-950 dark:to-black" style={{'--tw-gradient-from': 'hsl(212, 100%, 92%)', '--tw-gradient-to': 'hsl(212, 100%, 87%)', '--tw-gradient-stops': 'var(--tw-gradient-from), var(--tw-gradient-to)'} as React.CSSProperties}>
       <div className="absolute top-4 right-4">
         <ModeToggle />
       </div>
