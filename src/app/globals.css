@@ -85,4 +85,7 @@
   body {
     @apply bg-background text-foreground;
   }
+  .dark body {
+    @apply bg-gradient-to-br from-[hsl(220,40%,5%)] to-[hsl(220,40%,2%)];
+  }
 }
