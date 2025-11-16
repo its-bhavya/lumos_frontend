@@ -11,11 +11,27 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { generateQuiz, type GenerateQuizOutput } from "@/ai/flows/generate-quiz-from-resources";
 import { evaluateAnswer } from "@/app/actions";
 import { Check, ChevronsRight, Loader2, Sparkles, X } from "lucide-react";
 
 type QuizState = 'config' | 'loading' | 'active' | 'finished';
+
+type QuizQuestion = {
+    question: string;
+    answer: string;
+};
+
+type GenerateQuizOutput = {
+    questions: QuizQuestion[];
+}
+
+const placeholderQuiz: GenerateQuizOutput = {
+    questions: [
+      { question: "What is the powerhouse of the cell?", answer: "Mitochondria" },
+      { question: "Who was a key figure in the French Revolution?", answer: "Napoleon Bonaparte" },
+      { question: "In computing, what is a tree data structure where each node has at most two children?", answer: "Binary Tree" },
+    ],
+  };
 
 const formSchema = z.object({
   numberOfQuestions: z.string(),
@@ -43,7 +59,7 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      numberOfQuestions: "5",
+      numberOfQuestions: "3",
       difficulty: "medium",
       answerType: "short",
     },
@@ -51,19 +67,10 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
 
   async function onStartQuiz(values: z.infer<typeof formSchema>) {
     setQuizState('loading');
-    try {
-      const data = await generateQuiz({
-        resourceSummary: "User's uploaded study materials.",
-        numberOfQuestions: parseInt(values.numberOfQuestions, 10),
-        difficulty: values.difficulty,
-        answerType: values.answerType,
-      });
-      setQuizData(data);
-      setQuizState('active');
-    } catch (error) {
-      console.error("Failed to generate quiz", error);
-      setQuizState('config');
-    }
+    // Simulate API call to generate quiz
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setQuizData(placeholderQuiz);
+    setQuizState('active');
   }
 
   const handleAnswerSubmit = async () => {
@@ -80,17 +87,31 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   };
 
   const handleNextQuestion = () => {
-    if (quizData && currentQuestionIndex < quizData.questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-      setUserAnswer('');
-      setEvaluation(null);
+    const isLastQuestion = quizData && currentQuestionIndex === quizData.questions.length - 1;
+    if (quizData && !isLastQuestion) {
+        const newQuizResults = [...quizResults];
+        if(!evaluation) { // if user skipped question
+            const currentQuestion = quizData.questions[currentQuestionIndex];
+            newQuizResults.push({
+                question: currentQuestion.question,
+                userAnswer: 'Skipped',
+                correctAnswer: currentQuestion.answer,
+                score: 0,
+                feedback: `The correct answer is: "${currentQuestion.answer}"`
+            });
+            setQuizResults(newQuizResults);
+        }
+
+        setCurrentQuestionIndex(prev => prev + 1);
+        setUserAnswer('');
+        setEvaluation(null);
     } else {
-      // Quiz finished
-      setQuizState('finished');
-      localStorage.setItem(`quizResults_${sessionId}`, JSON.stringify(quizResults));
-      router.push(`/dashboard/${sessionId}/quiz/summary`);
+        setQuizState('finished');
+        localStorage.setItem(`quizResults_${sessionId}`, JSON.stringify(quizResults));
+        router.push(`/dashboard/${sessionId}/quiz/summary`);
     }
   };
+  
 
   const progress = quizData ? ((currentQuestionIndex + 1) / quizData.questions.length) * 100 : 0;
   const currentQuestion = quizData?.questions[currentQuestionIndex];
@@ -127,14 +148,17 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
             </CardContent>
             <CardFooter className="flex-col items-stretch gap-4">
               {!evaluation ? (
-                <Button onClick={handleAnswerSubmit} disabled={!userAnswer}>Submit Answer</Button>
+                 <div className="flex gap-2">
+                    <Button onClick={handleAnswerSubmit} disabled={!userAnswer} className="w-full">Submit Answer</Button>
+                    <Button onClick={handleNextQuestion} variant="outline" className="w-full">Skip</Button>
+                 </div>
               ) : (
                 <div className="space-y-4">
                    <div className={`p-4 rounded-md flex items-start gap-3 ${evaluation.score === 100 ? 'bg-green-100 text-green-800' : evaluation.score > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
                         {evaluation.score === 100 ? <Check className="h-5 w-5 mt-0.5"/> : <X className="h-5 w-5 mt-0.5"/>}
                         <p className="font-medium">{evaluation.feedback}</p>
                     </div>
-                  <Button onClick={handleNextQuestion}>
+                  <Button onClick={handleNextQuestion} className="w-full">
                     {currentQuestionIndex === quizData!.questions.length - 1 ? 'Finish & See Results' : 'Next Question'}
                     <ChevronsRight className="ml-2 h-4 w-4" />
                   </Button>

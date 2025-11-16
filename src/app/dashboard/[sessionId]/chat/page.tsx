@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState, useRef, useEffect } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { answerQuestionsAboutResources } from "@/ai/flows/answer-questions-about-resources";
 import { Loader2, Send } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -15,9 +14,12 @@ type Message = {
 };
 
 export default function ChatPage({ params }: { params: { sessionId: string } }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'ai', content: "Hello! Ask me anything about your study materials." }
+  ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -27,20 +29,23 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
     setLoading(true);
     setInput("");
 
-    try {
-      const { answer } = await answerQuestionsAboutResources({
-        question: input,
-        sessionId: params.sessionId,
-      });
-      const aiMessage: Message = { role: "ai", content: answer };
+    // Simulate API call and response
+    setTimeout(() => {
+      const aiMessage: Message = { role: "ai", content: "This is a placeholder response from the chatbot." };
       setMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
-      const errorMessage: Message = { role: "ai", content: "Sorry, I couldn't get an answer. Please try again." };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
       setLoading(false);
-    }
+    }, 1000);
   };
+  
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+        const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if(viewport) {
+            viewport.scrollTop = viewport.scrollHeight;
+        }
+    }
+  }, [messages]);
+
 
   return (
     <div className="container py-12 flex justify-center">
@@ -49,7 +54,7 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
           <CardTitle className="font-headline text-3xl">Ask a Question</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[500px] w-full pr-4">
+          <ScrollArea className="h-[500px] w-full pr-4" ref={scrollAreaRef}>
             <div className="space-y-6">
               {messages.map((message, index) => (
                 <div key={index} className={`flex items-start gap-3 ${message.role === "user" ? "justify-end" : ""}`}>
@@ -98,7 +103,7 @@ export default function ChatPage({ params }: { params: { sessionId: string } }) 
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
             />
-            <Button type="submit" size="icon" disabled={loading}>
+            <Button type="submit" size="icon" disabled={loading || !input.trim()}>
               <Send className="h-4 w-4" />
               <span className="sr-only">Send</span>
             </Button>
