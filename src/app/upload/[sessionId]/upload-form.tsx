@@ -26,7 +26,7 @@ type UploadCardProps = {
   fileType?: 'PDF' | 'Audio';
 };
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BACKEND_URL = "https://lumos-ai-69yf.onrender.com";
 
 function UploadCard({ icon, title, description, inputType, inputPlaceholder, onUpload, fileType }: UploadCardProps) {
     const [value, setValue] = useState('');

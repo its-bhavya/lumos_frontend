@@ -3,10 +3,10 @@
 
 import { v4 as uuidv4 } from 'uuid';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BACKEND_URL = "https://lumos-ai-69yf.onrender.com";
 
 if (!BACKEND_URL) {
-  throw new Error("Missing NEXT_PUBLIC_BACKEND_URL environment variable");
+  throw new Error("Missing BACKEND_URL");
 }
 
 export async function createSession(): Promise<string> {

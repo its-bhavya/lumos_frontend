@@ -6,7 +6,7 @@ import { Download, Loader2 } from "lucide-react";
 import MarkdownRenderer from "@/components/markdown-renderer";
 import { useToast } from "@/hooks/use-toast";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BACKEND_URL = "https://lumos-ai-69yf.onrender.com";
 
 export default function NotesPage({ params }: { params: { sessionId: string } }) {
   const [notes, setNotes] = useState("");

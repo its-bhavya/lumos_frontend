@@ -14,7 +14,7 @@ type Message = {
   content: string;
 };
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BACKEND_URL = "https://lumos-ai-69yf.onrender.com";
 
 export default function ChatPage({ params }: { params: { sessionId: string } }) {
   const [messages, setMessages] = useState<Message[]>([

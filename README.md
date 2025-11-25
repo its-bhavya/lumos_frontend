@@ -37,19 +37,13 @@ The backend server handles all the AI processing, document parsing, and data sto
 
 The frontend is the user interface you interact with in the browser.
 
-1.  **Create Environment File**:
-    In the root directory of your project, create a new file named `.env.local`. This file will tell the frontend where to find the backend. Add the following line to it:
-    ```
-    NEXT_PUBLIC_BACKEND_URL="http://127.0.0.1:8000"
-    ```
-
-2.  **Install Dependencies**:
+1.  **Install Dependencies**:
     Open a new terminal window, navigate to the project's root directory, and run:
     ```bash
     npm install
     ```
 
-3.  **Run the Development Server**:
+2.  **Run the Development Server**:
     Once the dependencies are installed, start the Next.js development server:
     ```bash
     npm run dev
@@ -58,4 +52,4 @@ The frontend is the user interface you interact with in the browser.
 
 ### 3. Accessing the App
 
-With both servers running, open your web browser and navigate to **`http://localhost:9002`**. You can now use the application.
+With both servers running, open your web browser and navigate to **`http://localhost:9002`**. You can now use the application. The frontend is configured to connect to `https://lumos-ai-69yf.onrender.com`. If you are running your own backend locally at `http://127.0.0.1:8000`, you will need to update the `BACKEND_URL` constant in the application files (e.g., `src/app/actions.ts`).

@@ -43,7 +43,7 @@ type QuizResult = {
   feedback: string;
 };
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BACKEND_URL = "https://lumos-ai-69yf.onrender.com";
 
 export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   const [quizState, setQuizState] = useState<QuizState>('config');

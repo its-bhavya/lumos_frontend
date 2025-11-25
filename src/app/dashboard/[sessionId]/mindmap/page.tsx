@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BACKEND_URL = "https://lumos-ai-69yf.onrender.com";
 
 export default function MindMapPage({ params }: { params: { sessionId: string } }) {
   const [mindMapUrl, setMindMapUrl] = useState<string | null>(null);
