@@ -91,7 +91,7 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
       formData.append('session_id', sessionId);
       formData.append('num_questions', values.numberOfQuestions);
       formData.append('difficulty', values.difficulty);
-      formData.append('type', values.answerType);
+      formData.append('answer_type', values.answerType);
 
       const response = await fetch(`${BACKEND_URL}/get_quiz_questions`, {
           method: 'POST',
@@ -342,3 +342,5 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
     </div>
   );
 }
+
+    
