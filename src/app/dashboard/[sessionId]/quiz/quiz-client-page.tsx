@@ -153,14 +153,11 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   };
 
   const handleNextQuestion = () => {
-    const isLastQuestion = quizData && currentQuestionIndex === quizData.quiz_questions.length - 1;
-
-    if (!isLastQuestion) {
-        setCurrentQuestionIndex(prev => prev + 1);
+    if (quizData && currentQuestionIndex < quizData.quiz_questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
     } else {
-        setQuizState('finished');
-        localStorage.setItem(`quizSession_${sessionId}`, "active");
-        router.push(`/dashboard/${sessionId}/quiz/summary`);
+      localStorage.setItem(`quizSession_${sessionId}`, "active");
+      router.push(`/dashboard/${sessionId}/quiz/summary`);
     }
   };
 
@@ -177,13 +174,11 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   const progress = totalQuestionsCount > 0 ? (answeredQuestionsCount / totalQuestionsCount) * 100 : 0;
   const currentQuestion = quizData?.quiz_questions[currentQuestionIndex];
   
-  if (quizState === 'loading' || quizState === 'finished') {
+  if (quizState === 'loading') {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center space-y-4">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <h1 className="font-headline text-4xl text-primary">
-          {quizState === 'loading' ? 'Generating Your Quiz...' : 'Calculating your results...'}
-        </h1>
+        <h1 className="font-headline text-4xl text-primary">Generating Your Quiz...</h1>
       </div>
     );
   }
@@ -347,7 +342,3 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
     </div>
   );
 }
-
-    
-
-    
