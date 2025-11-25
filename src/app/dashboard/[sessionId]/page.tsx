@@ -10,31 +10,30 @@ type DashboardOption = {
 };
 
 export default function DashboardPage({ params }: { params: { sessionId: string } }) {
-  const { sessionId } = params;
 
   const options: DashboardOption[] = [
     {
       title: "Ask Questions",
       description: "Chat with your documents.",
-      href: `/dashboard/${sessionId}/chat`,
+      href: `/dashboard/${params.sessionId}/chat`,
       icon: <MessageSquare className="h-10 w-10" />,
     },
     {
       title: "Generate Notes",
       description: "Get summarized notes.",
-      href: `/dashboard/${sessionId}/notes`,
+      href: `/dashboard/${params.sessionId}/notes`,
       icon: <FileText className="h-10 w-10" />,
     },
     {
       title: "Generate Mind Map",
       description: "Visualize key concepts.",
-      href: `/dashboard/${sessionId}/mindmap`,
+      href: `/dashboard/${params.sessionId}/mindmap`,
       icon: <Share2 className="h-10 w-10" />,
     },
     {
       title: "Generate Quiz",
       description: "Test your knowledge.",
-      href: `/dashboard/${sessionId}/quiz`,
+      href: `/dashboard/${params.sessionId}/quiz`,
       icon: <HelpCircle className="h-10 w-10" />,
     },
   ];
