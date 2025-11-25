@@ -177,11 +177,13 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
   const progress = totalQuestionsCount > 0 ? (answeredQuestionsCount / totalQuestionsCount) * 100 : 0;
   const currentQuestion = quizData?.quiz_questions[currentQuestionIndex];
   
-  if (quizState === 'loading') {
+  if (quizState === 'loading' || quizState === 'finished') {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center space-y-4">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <h1 className="font-headline text-4xl text-primary">Generating Your Quiz...</h1>
+        <h1 className="font-headline text-4xl text-primary">
+          {quizState === 'loading' ? 'Generating Your Quiz...' : 'Calculating your results...'}
+        </h1>
       </div>
     );
   }
@@ -321,7 +323,7 @@ export default function QuizClientPage({ sessionId }: { sessionId: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Answer Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValue-change={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select answer type" /></SelectTrigger>
                       </FormControl>
